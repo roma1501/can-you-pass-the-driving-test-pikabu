@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Сдай на права: автошкола</title>
+    <link rel="icon" type="image/png" href="assets/branding/icon-64.png">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #222;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        input, textarea, [contenteditable] { -webkit-user-select: text; user-select: text; }
+        img { -webkit-user-drag: none; }
+        #world3d {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            outline: none;
+            touch-action: none;
+        }
+        @font-face { font-family: 'GRubik'; src: url('assets/fonts/rubik.ttf?v=0.1.3-8fb7818d') format('truetype'); font-weight: 300 900; font-display: block; }
+        @font-face { font-family: 'GLilita'; src: url('assets/fonts/lilitaone.ttf?v=0.1.3-8fb7818d') format('truetype'); font-weight: 400; font-display: block; }
+        /* Загрузка: закат над городом, знак с названием, полоса-дорога с учебной машинкой. */
+        #loading-screen { position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(12px, 3vh, 26px);
+            overflow: hidden; font-family: 'GRubik', system-ui, sans-serif; color: #fff; padding: 16px;
+            background: linear-gradient(180deg, #172447 0%, #34407a 34%, #c45f6a 62%, #f39a52 74%, #2a2d36 74.2%, #1e2128 100%); }
+        #loading-screen .ls-sun { position: absolute; left: 50%; top: 74%; width: min(46vw, 420px); aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%;
+            background: radial-gradient(circle, #ffe08a 0%, #ffb44f 45%, rgba(255,140,70,0) 70%); opacity: .85; pointer-events: none; }
+        #loading-screen .ls-city { position: absolute; left: 0; right: 0; top: 48%; height: 26%; opacity: .92; pointer-events: none;
+            background:
+              linear-gradient(#1b1e2a, #1b1e2a) 3% 100%/6% 46% no-repeat, linear-gradient(#20243a, #20243a) 10% 100%/5% 70% no-repeat,
+              linear-gradient(#1b1e2a, #1b1e2a) 16% 100%/7% 55% no-repeat, linear-gradient(#232842, #232842) 24% 100%/4% 88% no-repeat,
+              linear-gradient(#1b1e2a, #1b1e2a) 30% 100%/8% 40% no-repeat, linear-gradient(#20243a, #20243a) 66% 100%/6% 64% no-repeat,
+              linear-gradient(#1b1e2a, #1b1e2a) 73% 100%/5% 92% no-repeat, linear-gradient(#232842, #232842) 79% 100%/7% 50% no-repeat,
+              linear-gradient(#1b1e2a, #1b1e2a) 88% 100%/5% 74% no-repeat, linear-gradient(#20243a, #20243a) 96% 100%/6% 44% no-repeat; }
+        #loading-screen .ls-city:after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle, rgba(255,214,120,.85) 1px, transparent 1.6px) 0 0/14px 18px; opacity: .35;
+            -webkit-mask: linear-gradient(transparent 30%, #000 60%); mask: linear-gradient(transparent 30%, #000 60%); }
+        .ls-sign { position: relative; z-index: 1; background: #0f6a3a; border-radius: 16px; padding: 6px; box-shadow: 0 16px 40px rgba(0,0,0,.45); max-width: min(620px, 92vw); margin-top: 26px; }
+        .ls-sign .in { border: 4px solid #fff; border-radius: 11px; padding: 12px 22px 14px; text-align: center; }
+        #loading-title { margin: 0; font: 400 clamp(24px, 6vw, 58px)/1 'GLilita', 'GRubik', sans-serif; color: #fff; letter-spacing: .01em; }
+        .ls-sign .tab { position: absolute; top: -28px; left: 50%; transform: translateX(-50%); background: #ff7a1a; color: #fff; font: 900 12px 'GRubik', sans-serif; letter-spacing: .16em;
+            padding: 6px 12px; border-radius: 8px 8px 0 0; text-transform: uppercase; white-space: nowrap; }
+        .ls-road { position: relative; z-index: 1; width: min(600px, 88vw); height: 64px; margin-top: 30px; }
+        .loading-bar { position: absolute; left: 0; right: 46px; top: 14px; height: 40px; border-radius: 10px; background: #2b2f39;
+            box-shadow: inset 0 3px 0 #e8ebf1, inset 0 -3px 0 #e8ebf1, 0 10px 24px rgba(0,0,0,.45); }
+        .loading-bar:before { content: ''; position: absolute; left: 10px; right: 10px; top: 50%; height: 4px; margin-top: -2px;
+            background: repeating-linear-gradient(90deg, #ffd257 0 22px, transparent 22px 40px); animation: ls-lane .6s linear infinite; opacity: .9; }
+        @keyframes ls-lane { to { background-position: -40px 0; } }
+        .loading-progress { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; border-radius: 10px; background: linear-gradient(90deg, rgba(255,122,26,0), rgba(255,122,26,.4));
+            transition: width .35s ease; }
+        .ls-car { position: absolute; right: -44px; top: -24px; width: 86px; height: 56px; filter: drop-shadow(0 6px 4px rgba(0,0,0,.5)); }
+        .ls-car .w { transform-box: fill-box; transform-origin: center; animation: ls-spin .5s linear infinite; }
+        @keyframes ls-spin { to { transform: rotate(360deg); } }
+        .ls-car .b { animation: ls-bounce .35s ease-in-out infinite alternate; }
+        @keyframes ls-bounce { to { transform: translateY(1.2px); } }
+        .ls-flag { position: absolute; right: 0; top: -6px; width: 40px; height: 70px; }
+        #loading-percent { position: absolute; right: -6px; top: -50px; width: 48px; height: 48px; border-radius: 50%; background: #fff; border: 6px solid #e5372f; color: #151821;
+            display: grid; place-items: center; font: 900 13px 'GRubik', sans-serif; box-shadow: 0 6px 14px rgba(0,0,0,.4); }
+        .loading-text { position: relative; z-index: 1; font: 800 14px 'GRubik', sans-serif; color: #fff; letter-spacing: .08em; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,.5); min-height: 1em; text-align: center; }
+        .ls-tip { position: relative; z-index: 1; display: flex; align-items: center; gap: 12px; max-width: min(560px, 92vw); background: rgba(14,16,22,.8); border-left: 5px solid #ff7a1a;
+            border-radius: 12px; padding: 10px 14px; font: 700 clamp(13px, 1.8vw, 16px)/1.35 'GRubik', sans-serif; color: #fff; box-shadow: 0 10px 24px rgba(0,0,0,.35); min-height: 58px; }
+        .ls-tip img { width: 52px; height: 52px; flex: none; border-radius: 50%; background: #ffe2a8; object-fit: cover; object-position: center 20%; }
+        .ls-tip b { display: block; color: #ffb340; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 2px; }
+        #loading-retry { position: relative; z-index: 1; padding: 12px 26px; border: 0; border-radius: 12px; background: #ffd257; color: #2a1d00; font: 900 16px 'GRubik', sans-serif;
+            text-transform: uppercase; cursor: pointer; box-shadow: 0 4px 0 #c08a00; }
+        @media (max-height: 460px) { #loading-screen { gap: 8px; } .ls-sign { margin-top: 22px; } .ls-sign .in { padding: 6px 16px 8px; } #loading-title { font-size: clamp(20px, 4.6vw, 34px); }
+            .ls-tip { min-height: 0; padding: 6px 10px; } .ls-tip img { width: 36px; height: 36px; } .ls-road { margin-top: 22px; } }
+    </style>
+</head>
+<body>
+    <canvas id="world3d"></canvas>
+    <div id="loading-screen" role="status" aria-busy="true" aria-live="polite">
+        <div class="ls-sun" aria-hidden="true"></div><div class="ls-city" aria-hidden="true"></div>
+        <div class="ls-sign"><div class="tab" data-t="menu.tab">Автошкола</div><div class="in"><h1 id="loading-title">Can You Pass The Driving Test?</h1></div></div>
+        <div class="ls-road">
+            <div class="loading-bar" id="loading-meter" role="progressbar" aria-label="Loading" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div class="loading-progress">
+                    <svg class="ls-car" viewBox="0 0 86 56" aria-hidden="true"><g class="b">
+                        <path d="M6 38 L8 27 Q10 22 16 21 L26 20 L36 11 Q39 9 44 9 L62 9 Q67 9 70 13 L76 21 Q82 22 83 27 L84 38 Z" fill="#f7f7f2" stroke="#1d2129" stroke-width="2.4"/>
+                        <path d="M30 20 L38 12.5 L49 12.5 L49 20 Z M53 20 L53 12.5 L62 12.5 Q65 12.5 67 15 L71 20 Z" fill="#8fc3e8" stroke="#1d2129" stroke-width="1.8"/>
+                        <path d="M8 31 L83 31" stroke="#ff7a1a" stroke-width="4"/><path d="M6 37 L84 37" stroke="#2d6cdf" stroke-width="3"/>
+                        <path d="M44 9 L50 0 L56 9 Z" fill="#fff" stroke="#e5372f" stroke-width="2"/><text x="50" y="8" text-anchor="middle" font-family="GRubik" font-weight="900" font-size="6" fill="#151821">У</text>
+                        <rect x="80" y="25" width="4" height="4" rx="1" fill="#ffd257"/><rect x="6" y="26" width="3" height="4" rx="1" fill="#e5372f"/></g>
+                        <g class="w"><circle cx="22" cy="41" r="9" fill="#1d2129"/><circle cx="22" cy="41" r="4" fill="#b9c0cc"/><rect x="21" y="34" width="2" height="14" fill="#6c7484"/></g>
+                        <g class="w"><circle cx="68" cy="41" r="9" fill="#1d2129"/><circle cx="68" cy="41" r="4" fill="#b9c0cc"/><rect x="67" y="34" width="2" height="14" fill="#6c7484"/></g>
+                    </svg>
+                </div>
+            </div>
+            <svg class="ls-flag" viewBox="0 0 40 70" aria-hidden="true"><rect x="5" y="4" width="3" height="66" fill="#d7dbe3"/>
+                <g transform="translate(8 4)"><rect width="28" height="20" fill="#fff"/><path d="M0 0h7v5H0zM14 0h7v5h-7zM7 5h7v5H7zM21 5h7v5h-7zM0 10h7v5H0zM14 10h7v5h-7zM7 15h7v5H7zM21 15h7v5h-7z" fill="#151821"/></g></svg>
+            <div id="loading-percent">0%</div>
+        </div>
+        <div class="loading-text" data-t="loading">Загрузка…</div>
+        <div class="ls-tip"><img src="assets/ui/instructor_calm.webp" alt=""><div><b id="ls-tip-who">Совет инструктора</b><span id="ls-tip"></span></div></div>
+        <button id="loading-retry" type="button" hidden></button>
+    </div>
+
+    <script src="https://games.pikabu.ru/sdk/sdk.js"></script>
+<script>
+        // Советы инструктора на экране загрузки (свой таймер, без движка). Язык — GAME_LANG после Constants.js, до него — язык документа.
+        (() => {
+            const TIPS = {
+                ru: ['Включайте поворотник заранее — без него поворот на экзамене засчитают ошибкой.', 'На жёлтый лучше остановиться, на красный — обязательно.',
+                    'Держитесь правой полосы. Встречная — это ошибка.', 'Старт на горке: держите тормоз, затем плавно газ — без отката.',
+                    'Задний ход: остановитесь и удерживайте тормоз — включится R.', 'Пешеход на зебре? Пропустите его!', 'Задания инструктора приносят деньги и очки водителя.',
+                    'Чем выше категория прав — тем дороже машины в автосалоне.'],
+                en: ['Signal early — turning without an indicator is a mistake in the exam.', 'Stop on amber if you can, always on red.', 'Keep to the right lane. The oncoming lane is a mistake.',
+                    'Hill start: hold the brake, then ease on the gas — no rolling back.', 'Reverse: stop and hold the brake — the car shifts to R.', 'Pedestrian on the zebra? Let them cross!',
+                    'Instructor jobs pay money and driver points.', 'Higher license class — fancier cars at the dealer.'],
+            };
+            let i = Math.floor(Math.random() * 8);
+            const lang = () => (typeof GAME_LANG !== 'undefined' ? GAME_LANG : document.documentElement.lang) === 'en' ? 'en' : 'ru';
+            const show = () => {
+                const el = document.getElementById('ls-tip'), who = document.getElementById('ls-tip-who');
+                if (!el) return;
+                const L = TIPS[lang()];
+                el.textContent = L[i % L.length]; i++;
+                if (who) who.textContent = lang() === 'en' ? 'Instructor tip' : 'Совет инструктора';
+            };
+            show();
+            const t = setInterval(() => { const s = document.getElementById('loading-screen'); if (!s || s.style.display === 'none') { clearInterval(t); return; } show(); }, 3800);
+        })();
+    </script>
+    <!-- Порядок значим: Constants.js первым (остальные читают его глобалы), main.js последним -->
+    <script src="js/Constants.js?v=0.1.3-8fb7818d"></script>
+    <!-- 1.40 ads-ui: поле игры на десктопе не шире 2:1 (Playgama); вторым — его resize идёт раньше обработчиков движка -->
+    <script src="js/ViewCap.js?v=0.1.3-8fb7818d"></script>
+    <script src="libs/simplex-noise.js?v=0.1.3-8fb7818d"></script>
+    <script src="libs/babylon.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/Maps.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/Maps2D.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/World2D.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/World3D.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/Terrain3D.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/CameraControl.js?v=0.1.3-8fb7818d"></script>
+    <!-- 1.40: камера не заслоняется сценой (столкновение, полупрозрачные заслоны) -->
+    <script src="js/CameraSight.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/Model3D.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/ModelFBX.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/ModelOBJ.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/ModelGLTF.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/Location3D.js?v=0.1.3-8fb7818d"></script>
+    <!-- world-a: Rig.js (риги и клипы), Nav.js (коллизии, высоты, пути) -->
+    <script src="js/Rig.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/Nav.js?v=0.1.3-8fb7818d"></script>
+    <!-- 1.30 мир (world-b): уровни графики и время суток -->
+    <script src="js/Quality.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/Sky3D.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/Pause.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/Sound.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/Lang.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/Platform.js?v=0.1.3-8fb7818d"></script>
+    <!-- Адаптеры площадок (Platform.register): Playgama; игра добавляет свои здесь же, после Platform.js -->
+    <script src="js/PlatformPlaygama.js?v=0.1.3-8fb7818d"></script>
+    <!-- Адаптеры Telegram Mini App, CrazyGames, Android-обёртки и сборки test (detect() выбирает площадку) -->
+    <script src="js/PlatformTelegram.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/PlatformCrazy.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/PlatformPikabu.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/PlatformAndroid.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/PlatformTest.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/LoadingScreen.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/ParticleFX.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/Telemetry.js?v=0.1.3-8fb7818d"></script>
+    <!-- 1.30 systems-b: магазин косметики, Daily Gift, колесо фортуны (логика без UI, опт-ин: Shop/DailyGift/Wheel.init в Game.js) -->
+    <script src="js/Shop.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/DailyGift.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/Wheel.js?v=0.1.3-8fb7818d"></script>
+    <!-- 1.30 systems-a: ввод, раскладка HUD, обучение. Opt-in: игра сама зовёт Input.init / HudLayout.init / Tutorial.init -->
+    <script src="js/HudLayout.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/Input.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/Tutorial.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/LiveWater3D.js?v=0.1.3-8fb7818d"></script>
+    <!-- 1.40 motion: физический блочный персонаж (opt-in). Порядок значим: MotionMath (GM) -> Humanoid -> MotionMatch -> CharacterPhysics -> Ragdoll -> Character -->
+    <script src="js/MotionMath.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/Humanoid.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/MotionMatch.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/CharacterPhysics.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/Ragdoll.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/Character.js?v=0.1.3-8fb7818d"></script>
+    <!-- 1.40 obby (ветка obby): трасса из деталей карты, тело героя, боты и их чат, вид. Опт-ин: игра сама зовёт ObbyCourse.build / ObbyBots.init -->
+    <script src="js/ObbyCourse.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/ObbyBody.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/ObbyChat.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/ObbyBots.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/ObbyCourseView.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/ObbyAvatar.js?v=0.1.3-8fb7818d"></script>
+    <!-- Скрипты игры (js/Game.js и её модули) — здесь, до main.js -->
+    <script src="js/DevMap.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/GameAssetsData.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/GameData.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/GameLang.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/GameRoads.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/GameWorld.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/GameDecor.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/GameCar.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/GameCarFx.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/GameTraffic.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/GamePeds.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/GameSignals.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/GameNav.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/GameRules.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/GameInstructor.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/GameExam.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/GameJobs.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/GameAudio.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/GameUI.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/Game.js?v=0.1.3-8fb7818d"></script>
+    <script src="js/main.js?v=0.1.3-8fb7818d"></script>
+    <script>
+        // Игровая область: долгий тап и ПКМ не открывают меню браузера, картинки не
+        // тянутся, текст не выделяется — кроме настоящих полей ввода.
+        (() => {
+            const isField = t => t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable);
+            for (const type of ['contextmenu', 'dragstart', 'selectstart']) {
+                document.addEventListener(type, e => { if (!isField(e.target)) e.preventDefault(); });
+            }
+        })();
+    </script>
+</body>
+</html>
