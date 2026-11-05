@@ -475,7 +475,7 @@ const GameUI = {
 </div>
 <div id="g-menu" class="hide"><div class="mstage land" id="g-mstage">
   <div class="post-wrap">
-    <div class="hwsign"><div class="tab" data-t="menu.tab"></div><div class="in"><h1>Can You Pass<br>The <em>Driving</em> Test?</h1><div class="sub">${I('flag')}<span data-t="menu.sub"></span></div></div></div>
+    <div class="hwsign"><div class="tab" data-t="menu.tab"></div><div class="in"><h1>${String(GAME_PLATFORM) === 'pikabu' ? 'Сдай на <em>права</em>' : 'Can You Pass<br>The <em>Driving</em> Test?'}</h1><div class="sub">${I('flag')}<span data-t="menu.sub"></span></div></div></div>
     <div class="signs">
       <button class="sbtn go" id="g-play">${I('play')}<span data-t="menu.play"></span></button>
       <div class="sbtn-row">
